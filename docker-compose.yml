@@ -1,0 +1,35 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      # Mount data and config to persist changes
+      - ./config:/var/www/html/config
+      - ./data:/var/www/html/data
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=geometrydash
+      - DB_NAME=geometrydash
+
+  db:
+    image: mariadb:10.6
+    environment:
+      MYSQL_ROOT_PASSWORD: geometrydash
+      MYSQL_DATABASE: geometrydash
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database.sql:/docker-entrypoint-initdb.d/00-database.sql
+      # Map the update scripts directory
+      - ./_updates:/tmp/updates
+      # A script to run all the migrations
+      - ./docker-init-updates.sh:/docker-entrypoint-initdb.d/01-updates.sh
+    ports:
+      - "3306:3306"
+
+volumes:
+  db_data:
